@@ -54,7 +54,7 @@ class TrueCryptScanner(GenMemScanObject):
     Scan for TrueCrypt passphrases using the method described
     in Brian Kaplan's thesis, 'RAM is Key, Extracting Disk
     Encryption Keys From Volatile Memory', pages 22-23.
-    http://www.andrew.cmu.edu/user/bfkaplan/
+    http://cryptome.org/0003/RAMisKey.pdf
     
     Passphrases are stored in a structure containing a passphrase
     length (a value between 1 and 64 stored in the first of the four
