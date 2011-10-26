@@ -58,15 +58,16 @@ for /f "tokens=*" %%a in ('type "%mdl_output%" ^| grep "%module_name%" ^| %awk_m
 ::
 set GREP_PARAM=kernel
 set SED_PARAM="s/\[kernel://g"
-set SECONDVALUE=(\"0x\"^$2)+0
-set AWK_CONDITION=%secondvalue% ^>^= \"%min_offset%\" ^&^& %secondvalue% ^<^= \"%max_offset%\"
+set HEX2DEC_SECOND_VALUE=(\"0x\"^$2)+0
+set AWK_LCONDITION=%hex2dec_second_value% ^>= \"%min_offset%\"
+set AWK_RCONDITION=%hex2dec_second_value% ^<= \"%max_offset%\"
 
 ::
 :: Printing found passwords
 ::
 cls
 ECHO Found passwords:
-type "%str_output%" | grep %grep_param% | sed %sed_param% | awk --non-decimal-data "{ if(%awk_condition%) print $4 }" | sort
+type "%str_output%" | grep %grep_param% | sed %sed_param% | awk --non-decimal-data "{ if(%awk_lcondition% && %awk_rcondition%) print $4 }" | sort
 
 :END
 pause
