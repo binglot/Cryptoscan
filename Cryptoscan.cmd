@@ -1,6 +1,13 @@
 @echo off
 cls
-set /p FILE=Please enter the image's path: 
+set /p FILE=Please enter the memory image's path: 
+
+if exist "%FILE%" goto RUN
+echo The file couldn't be found!
+goto END
+
+
+:RUN
 
 ::
 :: Values to be adjusted by the user
@@ -27,12 +34,18 @@ mkdir %output_folder% 2> NUL
 ::
 :: Extracting data
 ::
-::	There's a bug within the framework so that if volatility is run from different
-:: 	directory then its own then it doesn't find external plugins, hence the dirty trick.
-::
+ECHO.
+ECHO (1/3) Running Cryptoscan.
 python volatility cryptoscan -f "%file%" > "%cd%\%pwd_output%"
+ECHO.
+ECHO (2/3) Associating strings with the processes they belong to.
 python volatility strings -f "%file%" -s "%pwd_output%" > "%str_output%"
+ECHO.
+ECHO (3/3) Eliminating strings that don't belong to the TrueCrypt's driver.
 python volatility modules -f "%file%" > "%mdl_output%"
+ECHO.
+ECHO Finished extracting data.
+pause
 
 ::
 :: Calculating a memory range of the module.
@@ -48,6 +61,12 @@ set SED_PARAM="s/\[kernel://g"
 set SECONDVALUE=(\"0x\"^$2)+0
 set AWK_CONDITION=%secondvalue% ^>^= \"%min_offset%\" ^&^& %secondvalue% ^<^= \"%max_offset%\"
 
+::
+:: Printing found passwords
+::
 cls
-type "%str_output%" | grep %grep_param% | sed %sed_param% | awk --non-decimal-data "{ if(%awk_condition%) print \"Found password:\",$4 }" | sort
+ECHO Found passwords:
+type "%str_output%" | grep %grep_param% | sed %sed_param% | awk --non-decimal-data "{ if(%awk_condition%) print $4 }" | sort
+
+:END
 pause
