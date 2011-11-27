@@ -84,7 +84,9 @@ class TrueCryptScanner(GenMemScanObject):
             # last character has to be null.
             maxLength = TC_PASSWORD_LENGTH - 1
 
-            if length > maxLength or length == 0:
+            # Volatility version 2.0 throws errors if the string
+            # is a single space or a tab (still printable).
+            if length > maxLength or length < 2:
                 return 
 
             passphrase = raw_data[:length]
@@ -132,7 +134,7 @@ class cryptoscan(forensics.commands.command):
     meta_info['license'] = 'GNU General Public License 2.0 or later'
     meta_info['url'] = 'http://jessekornblum.com/, http://passionateaboutis.blogspot.com/'
     meta_info['os'] = 'WIN_32_XP_SP2'
-    meta_info['version'] = '2.0'
+    meta_info['version'] = '2.0.1'
 
     # This module makes use of the standard parser. Thus it is not 
     # necessary to override the forensics.commands.command.parser() method.
