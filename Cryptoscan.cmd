@@ -1,6 +1,9 @@
 @echo off
 cls
-set /p FILE=Please enter the memory image's path: 
+echo Please enter the image path (e.g. C:\John-PC.raw, without quotation marks)
+set /p FILE=: 
+echo What Windows was it taken from (e.g. WinXPSP3x86, VistaSP2x86, Win7SP1x86) ?
+set /P PROFILE=: 
 
 if exist "%FILE%" goto RUN
 echo The file couldn't be found!
@@ -12,7 +15,7 @@ goto END
 ::
 :: Values to be adjusted by the user
 ::
-set PATH=%PATH%;.\gnuwin32
+set PATH=%PATH%;.\unxtools
 set OUTPUT_FOLDER=output
 set MODULE_NAME=truecrypt.sys
 
@@ -23,8 +26,8 @@ set MDL_OUTPUT=%output_folder%\modules.txt
 ::
 :: The parameter 'non-decimal-data' and adding zero makes it convert hex to decimal
 ::
-set AWK_MIN=awk --non-decimal-data "{ print ($2)+0; }"
-set AWK_MAX=awk --non-decimal-data "{ print ($2+$3); }"
+set AWK_MIN=gawk --non-decimal-data "{ print ($3)+0; }"
+set AWK_MAX=gawk --non-decimal-data "{ print ($3+$4); }"
 
 ::
 :: Creating the output folder
@@ -39,10 +42,10 @@ ECHO (1/3) Running Cryptoscan.
 python volatility cryptoscan -f "%file%" > "%cd%\%pwd_output%"
 ECHO.
 ECHO (2/3) Associating strings with the processes they belong to.
-python volatility strings -f "%file%" -s "%pwd_output%" > "%str_output%"
+volatility.exe strings --profile=%profile% -f "%file%" -s "%pwd_output%" > "%str_output%"
 ECHO.
 ECHO (3/3) Eliminating strings that don't belong to the TrueCrypt's driver.
-python volatility modules -f "%file%" > "%mdl_output%"
+volatility.exe modules --profile=%profile% -f "%file%" > "%mdl_output%"
 ECHO.
 ECHO Finished extracting data.
 pause
@@ -58,7 +61,7 @@ for /f "tokens=*" %%a in ('type "%mdl_output%" ^| grep "%module_name%" ^| %awk_m
 ::
 set GREP_PARAM=kernel
 set SED_PARAM="s/\[kernel://g"
-set HEX2DEC_SECOND_VALUE=(\"0x\"^$2)+0
+set HEX2DEC_SECOND_VALUE=(^$2)+0
 set AWK_LCONDITION=%hex2dec_second_value% ^>= \"%min_offset%\"
 set AWK_RCONDITION=%hex2dec_second_value% ^<= \"%max_offset%\"
 
@@ -67,7 +70,7 @@ set AWK_RCONDITION=%hex2dec_second_value% ^<= \"%max_offset%\"
 ::
 cls
 ECHO Found passwords:
-type "%str_output%" | grep %grep_param% | sed %sed_param% | awk --non-decimal-data "{ if(%awk_lcondition% && %awk_rcondition%) print $4 }" | sort
+type "%str_output%" | grep %grep_param% | sed %sed_param% | gawk --non-decimal-data "{ if(%awk_lcondition% && %awk_rcondition%) print $3 }"
 
 :END
 pause
